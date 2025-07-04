@@ -11,8 +11,8 @@ json/
 **/*.pyd
 
 **/~/
-**/flan-t5/
-**/gpt2/
+thesis-B/flan-t5/
+thesis-B/gpt2/
 .vscode/
 
 .DS_Store
