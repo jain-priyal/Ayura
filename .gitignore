@@ -1,7 +1,7 @@
 
 mistral_env/
 mistral_env2/
-
+json/
 .env
 *.env
 
@@ -11,8 +11,8 @@ mistral_env2/
 **/*.pyd
 
 **/~/
-
-
+**/flan-t5/
+**/gpt2/
 .vscode/
 
 .DS_Store
