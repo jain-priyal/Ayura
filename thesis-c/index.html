@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayurveda AI Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 700px;
+            height: 90vh;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 32px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(25px);
+        }
+
+        .chat-header,
+        .persona-selector,
+        .chat-input-container {
+            padding: 20px 30px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-icon {
+            font-size: 28px;
+            background: #f9fafb;
+            padding: 10px;
+            border-radius: 16px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ddd;
+        }
+
+        .message-content {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            background: white;
+            font-size: 14px;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .chat-input-container {
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .input-wrapper {
+            display: flex;
+            background: white;
+            border-radius: 24px;
+            padding: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .chat-input {
+            flex: 1;
+            border: none;
+            padding: 12px 16px;
+            outline: none;
+        }
+        .persona-selector select {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 15px;
+            border: none;
+            border-radius: 18px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="black" height="12" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 12px;
+            cursor: pointer;
+        }
+
+
+        .send-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 50px 20px;
+            color: #555;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="header-icon">🌿</div>
+            <div>
+                <h2>Ayura</h2>
+                <p>Your Wellness Assistant</p>
+            </div>
+        </div>
+
+        <div class="persona-selector">
+            <select id="persona">
+                <option value="Normal">General Consultation</option>
+                <option value="20-year-old female">Young Adult (20s)</option>
+                <option value="65-year-old female">Senior Adult (65+)</option>
+            </select>
+        </div>
+
+        <div class="chat-messages" id="chatBox">
+            <div class="welcome-message">
+                <h3>Welcome to Ayura</h3>
+                <p>How can I assist you today?</p>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <div class="input-wrapper">
+                <input type="text" id="questionInput" class="chat-input" placeholder="Ask your question...">
+                <button class="send-button" id="sendButton">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById("chatBox");
+        const questionInput = document.getElementById("questionInput");
+        const personaSelect = document.getElementById("persona");
+        const sendButton = document.getElementById("sendButton");
+
+        let history = [];
+
+        personaSelect.addEventListener("change", () => {
+            history = [];
+            chatBox.innerHTML = `<div class="welcome-message">
+        <h3>Welcome to Ayurveda AI</h3>
+        <p>How can I assist you today?</p>
+      </div>`;
+            questionInput.value = "";
+        });
+
+        function appendMessage(sender, text) {
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `message ${sender}`;
+            messageDiv.innerHTML = `
+        <div class="message-avatar">${sender === "user" ? "U" : "AI"}</div>
+        <div class="message-content">${text}</div>
+      `;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const message = questionInput.value.trim();
+            if (!message) return;
+
+            appendMessage("user", message);
+            history.push([message, ""]);
+            questionInput.value = "";
+
+            const response = await fetch("http://localhost:8000/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message, persona: personaSelect.value, history })
+            });
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let result = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value);
+                const parts = chunk.split("data:").filter(p => p.trim());
+
+                parts.forEach(part => {
+                    const data = JSON.parse(part.trim());
+                    if (data.token) {
+                        result += data.token;
+                        const lastBotMessage = chatBox.querySelector('.message.bot:last-child');
+                        if (!lastBotMessage) {
+                            appendMessage("bot", result);
+                        } else {
+                            lastBotMessage.querySelector('.message-content').textContent = result;
+                        }
+                    }
+                    if (data.done) {
+                        history[history.length - 1][1] = result;
+                    }
+                });
+            }
+        }
+
+        sendButton.addEventListener("click", sendMessage);
+        questionInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") sendMessage();
+        });
+    </script>
+</body>
+
+</html>
